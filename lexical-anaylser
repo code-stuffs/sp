@@ -1,0 +1,142 @@
+// lexical anaylser for c language
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <string.h>
+
+// List of C keywords
+const char *keywords[] = { "int", "float", "if", "else", "while", "for", "return", "void", "char" };
+int num_keywords = sizeof(keywords) / sizeof(keywords[0]);
+
+// Function to check if a string is a keyword
+int isKeyword(char *str) {
+    for (int i = 0; i < num_keywords; i++) {
+        if (strcmp(str, keywords[i]) == 0)
+            return 1;
+    }
+    return 0;
+}
+
+// Function to check if a character is a separator
+int isSeparator(char ch) {
+    return ch == ';' || ch == ',' || ch == '(' || ch == ')' || ch == '{' || ch == '}' || ch == '[' || ch == ']';
+}
+
+// Function to check if a character is an operator
+int isOperator(char ch) {
+    return ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '%' || ch == '=' || ch == '<' || ch == '>';
+}
+
+// Function to recognize tokens in the input
+void tokenize(char *code) {
+    int i = 0;
+    while (code[i] != '\0') {
+        // Skip whitespace
+        if (isspace(code[i])) {
+            i++;
+            continue;
+        }
+
+        // Recognize identifiers and keywords
+        if (isalpha(code[i]) || code[i] == '_') {
+            char buffer[50];
+            int j = 0;
+            while (isalnum(code[i]) || code[i] == '_') {
+                buffer[j++] = code[i++];
+            }
+            buffer[j] = '\0';
+
+            if (isKeyword(buffer)) {
+                printf("Keyword: %s\n", buffer);
+            } else {
+                printf("Identifier: %s\n", buffer);
+            }
+            continue;
+        }
+
+        // Recognize numbers, including decimals
+        if (isdigit(code[i])) {
+            char buffer[50];
+            int j = 0;
+            int has_decimal = 0;
+
+            while (isdigit(code[i]) || (code[i] == '.' && !has_decimal)) {
+                if (code[i] == '.') has_decimal = 1;
+                buffer[j++] = code[i++];
+            }
+            buffer[j] = '\0';
+            printf("Number: %s\n", buffer);
+            continue;
+        }
+
+        // Recognize operators
+        if (isOperator(code[i])) {
+            // Handle two-character operators (e.g., ==, !=, <=, >=, etc.)
+            if ((code[i] == '=' || code[i] == '!' || code[i] == '<' || code[i] == '>') && code[i + 1] == '=') {
+                printf("Operator: %c%c\n", code[i], code[i + 1]);
+                i += 2;
+            } else {
+                printf("Operator: %c\n", code[i]);
+                i++;
+            }
+            continue;
+        }
+
+        // Recognize separators
+        if (isSeparator(code[i])) {
+            printf("Separator: %c\n", code[i]);
+            i++;
+            continue;
+        }
+
+        // Recognize comments
+        if (code[i] == '/' && code[i + 1] == '/') {
+            printf("Comment: ");
+            i += 2;
+            while (code[i] != '\n' && code[i] != '\0') {
+                putchar(code[i++]);
+            }
+            printf("\n");
+            continue;
+        } else if (code[i] == '/' && code[i + 1] == '*') {
+            printf("Comment: ");
+            i += 2;
+            while (!(code[i] == '*' && code[i + 1] == '/')) {
+                putchar(code[i++]);
+                if (code[i] == '\0') {
+                    printf("\nError: Unterminated comment\n");
+                    return;
+                }
+            }
+            i += 2; // Skip past the closing '*/'
+            printf("\n");
+            continue;
+        }
+
+        // Handle unrecognized characters
+        printf("Unrecognized character: %c\n", code[i]);
+        i++;
+    }
+}
+
+int main() {
+    // Hardcoded input code
+    char code[] =
+        "int main()\n"
+        "{\n"
+        "    int a = 6;\n"
+        "    float b = 3.14;\n"
+        "\n"
+        "    if (a < b)\n"
+        "    {\n"
+        "        a = a + 1;\n"
+        "    }\n"
+        "    return 0;\n"
+        "}\n";
+
+    printf("Tokenizing the hardcoded input code:\n\n");
+    tokenize(code);
+
+    return 0;
+}
